@@ -76,53 +76,49 @@ var (
 	pheromoneFoodColor = color.RGBA{122, 250, 150, alfa}
 )
 
-func render(gc *draw2dimg.GraphicContext, objects [][][]simulation.Object) bool {
+func render(gc *draw2dimg.GraphicContext, objects []simulation.Object) bool {
 	gc.SetFillColor(color.RGBA{0xff, 0xff, 0xff, 0xff})
 	gc.Clear()
 	gc.BeginPath()
-	for _, row := range objects {
-		for _, obs := range row {
-			for _, o := range obs {
-				var c color.RGBA
-				size := 1.0
-				switch o.GetType() {
-				case simulation.ANT:
-					if o.IsDead() {
-						c = dieAntColor
-					} else {
-						if o.(*simulation.Ant).CarryingFood {
-							c = foodColor
-						} else {
-							c = antColor
-						}
-					}
-					size = 2.0
+	for _, o := range objects {
 
-				case simulation.FOOD:
+		var c color.RGBA
+		size := 1.0
+		switch o.GetType() {
+		case simulation.ANT:
+			if o.IsDead() {
+				c = dieAntColor
+			} else {
+				if o.(*simulation.Ant).CarryingFood {
 					c = foodColor
-					size = 5.0
-				case simulation.HOME:
-					c = homeColor
-					/*
-						case simulation.PHEROMONEFOOD:
-							c = pheromoneFoodColor
-							a := alfa *
-								o.(*simulation.PheromoneFood).GetPower()
-							c.A = uint8(a)
-							size = 3.0
-						case simulation.PHEROMONEHOME:
-							c = pheromoneHomeColor
-							a := alfa *
-								o.(*simulation.PheromoneHome).GetPower()
-							c.A = uint8(a)
-
-							size = 3.0
-					*/
+				} else {
+					c = antColor
 				}
-
-				draw(gc, o.GetPosition(), c, size)
 			}
+			size = 2.0
+
+		case simulation.FOOD:
+			c = foodColor
+			size = 2.0
+		case simulation.HOME:
+			c = homeColor
+			/*
+				case simulation.PHEROMONEFOOD:
+					c = pheromoneFoodColor
+					a := alfa *
+						o.(*simulation.PheromoneFood).GetPower()
+					c.A = uint8(a)
+					size = 3.0
+				case simulation.PHEROMONEHOME:
+					c = pheromoneHomeColor
+					a := alfa *
+						o.(*simulation.PheromoneHome).GetPower()
+					c.A = uint8(a)
+
+					size = 3.0
+			*/
 		}
+		draw(gc, o.GetPosition(), c, size)
 	}
 	gc.Close()
 	return true

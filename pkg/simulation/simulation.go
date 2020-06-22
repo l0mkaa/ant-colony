@@ -115,12 +115,12 @@ func (s *Simulation) AddFood(position Coordinates) {
 // На вход требует канал для остановки цикла симуляции.
 // Возвращает канал (int) счетчик итерации симуляции
 // и канал для считывания объектов на текущем шаге.
-func (s *Simulation) Run(abort <-chan bool) (chan int, chan [][][]Object) {
+func (s *Simulation) Run(abort <-chan bool) (chan int, chan []Object) {
 
-	obs := make(chan [][][]Object)
+	objects := make(chan []Object)
 	step := make(chan int)
 
-	go func(step chan int, obs chan [][][]Object, abort <-chan bool) {
+	go func(step chan int, obs chan []Object, abort <-chan bool) {
 		defer close(step)
 		defer close(obs)
 		var mu sync.Mutex
@@ -133,46 +133,63 @@ func (s *Simulation) Run(abort <-chan bool) (chan int, chan [][][]Object) {
 				}
 			}
 			i++
-			s.step()
+			obs := s.step()
 			mu.Lock()
 			go func() {
-				obs <- s.data.objects
+				objects <- obs
 				mu.Unlock()
 			}()
 			step <- i
 			time.Sleep(time.Millisecond * 100)
 		}
-	}(step, obs, abort)
-	return step, obs
+	}(step, objects, abort)
+	return step, objects
 }
-func (s *Simulation) step() {
-	for _, row := range s.data.objects {
-		for _, c := range row {
-			l := len(c)
+func (s *Simulation) step() []Object {
+	obs := make([]Object, len(s.data.dynamicObjects))
+	copy(obs, s.data.dynamicObjects)
+	t := make(chan struct{}, 100)
+	var n sync.WaitGroup
+	for _, o := range s.data.dynamicObjects {
+		n.Add(1)
+		go func(o Object) {
+			defer n.Done()
+			t <- struct{}{}
+			o.process()
+			<-t
+		}(o)
+	}
+	n.Wait()
 
-			for i := 0; i < l; i++ {
-				switch c[i].GetType() {
+	s.data.staticObjects.Range(func(pos, os interface{}) bool {
+		n.Add(1)
+		go func() {
+			os.(*sync.Map).Range(func(id, o interface{}) bool {
+				switch o.(Object).GetType() {
 				case PHEROMONEFOOD:
-					if c[i].(*PheromoneFood).power < 0.001 {
-						s.data.deleteObject(c[i].GetPosition(), c[i].GetID())
-						i--
-						l--
+					if o.(*PheromoneFood).power < 0.00001 {
+						s.data.deleteObject(o.(Object).GetPosition(), o.(Object).GetID())
+						return true
 					}
 				case PHEROMONEHOME:
-					if c[i].(*PheromoneHome).power < 0.001 {
-						s.data.deleteObject(c[i].GetPosition(), c[i].GetID())
-						i--
-						l--
+					if o.(*PheromoneHome).power < 0.00001 {
+						s.data.deleteObject(o.(Object).GetPosition(), o.(Object).GetID())
+						return true
 					}
 				}
-				if i >= 0 {
-					c[i].process()
-				}
-			}
+				o.(Object).process()
+				obs = append(obs, o.(Object))
 
-		}
-	}
+				return true
+			})
+			n.Done()
+		}()
+		n.Wait()
+		return true
+	})
+
 	s.steps++
+	return obs
 }
 
 func (s *Simulation) shouldRespawned() (bool, Coordinates) {
@@ -189,7 +206,7 @@ func (s *Simulation) isCell(position Coordinates) bool {
 	return true
 }
 
-func (s *Simulation) cellContents(position Coordinates) ([]Object, int) {
+func (s *Simulation) cellContents(position Coordinates) []Object {
 	return s.data.objectsByPosition(position)
 }
 
@@ -208,23 +225,24 @@ func (s *Simulation) addPheromone(position Coordinates, t PheromoneType) {
 		return
 	}
 
-	obs, _ := s.data.objectsByPosition(position)
-
-	for _, v := range obs {
-		switch v.GetType() {
-		case PHEROMONEFOOD:
-			if t == PHEROMONEFOODTYPE {
-				v.(*PheromoneFood).power++
-				return
-			}
-		case PHEROMONEHOME:
-			if t == PHEROMONEHOMETYPE {
-				v.(*PheromoneHome).power++
-				return
+	if obs := s.data.objectsByPosition(position); obs != nil {
+		for i := range obs {
+			switch obs[i].GetType() {
+			case PHEROMONEFOOD:
+				if t == PHEROMONEFOODTYPE {
+					obs[i].(*PheromoneFood).power++
+					return
+				}
+			case PHEROMONEHOME:
+				if t == PHEROMONEHOMETYPE {
+					obs[i].(*PheromoneHome).power++
+					return
+				}
 			}
 		}
 	}
 	createPheromone(t)
+
 }
 
 func distance(p1, p2 Coordinates) float64 {
@@ -242,8 +260,9 @@ func uuid() (s string) {
 	s = fmt.Sprintf("%x", b)
 	return
 }
-
-func randFloat(min, max float64) float64 {
+func init() {
 	rand.Seed(time.Now().UnixNano())
+}
+func randFloat(min, max float64) float64 {
 	return min + rand.Float64()*(max-min)
 }

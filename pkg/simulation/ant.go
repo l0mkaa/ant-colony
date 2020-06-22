@@ -41,7 +41,7 @@ type Ant struct {
 	// Принадлежит ли ячейка куда смотрит муравей симуляции
 	isCell func(Coordinates) bool
 	// Содержимое ячейки куда смотрит муравей
-	cellContents func(Coordinates) ([]Object, int)
+	cellContents func(Coordinates) []Object
 	// Муравей взял еду
 	takeFood func(position Coordinates, foodID string)
 	// Муравей оставил феромон
@@ -57,7 +57,7 @@ func newAnt(
 	sight int,
 	lifeSpan int,
 	isCell func(Coordinates) bool,
-	cellContents func(Coordinates) ([]Object, int),
+	cellContents func(Coordinates) []Object,
 	takeFood func(position Coordinates, foodID string),
 	addPheromone func(Coordinates, PheromoneType),
 	shouldRespawned func() (bool, Coordinates),
@@ -120,10 +120,11 @@ func (a *Ant) process() {
 		a.randomizeDirection()
 		return
 	}
-	fwdCellContents, _ := a.cellContents(Coordinates{a.position.X + fwd.X, a.position.Y + fwd.Y})
-	containsType := func(ctc []Object, t ObjectType) (int, bool) {
-		for i, v := range ctc {
-			if v.GetType() == t {
+	fwdCellContents := a.cellContents(Coordinates{a.position.X + fwd.X, a.position.Y + fwd.Y})
+	containsType := func(obs []Object, t ObjectType) (int, bool) {
+
+		for i := range obs {
+			if obs[i].GetType() == t {
 				return i, true
 			}
 		}
@@ -155,7 +156,8 @@ func (a *Ant) process() {
 
 			a.steps = 0
 
-			a.takeFood(fwdCellContents[index].GetPosition(), fwdCellContents[index].GetID())
+			o := fwdCellContents[index]
+			a.takeFood(o.(Object).GetPosition(), o.(Object).GetID())
 
 			a.lookForHome()
 
@@ -270,13 +272,13 @@ func (a *Ant) seek(isFood bool) {
 }
 
 func (a *Ant) scoreForCell(position Coordinates, isFood bool) float64 {
-	obs, count := a.cellContents(position)
-	if count == 0 {
+	obs := a.cellContents(position)
+	if obs == nil {
 		return 0
 	}
 	containsObjectByType := func(obs []Object, t ObjectType) (int, bool) {
-		for i, o := range obs {
-			if o.GetType() == t {
+		for i := range obs {
+			if obs[i].GetType() == t {
 				return i, true
 			}
 		}
@@ -292,7 +294,9 @@ func (a *Ant) scoreForCell(position Coordinates, isFood bool) float64 {
 		if !ok {
 			return 0
 		}
-		return float64(obs[i].(*PheromoneFood).power)
+
+		o := obs[i]
+		return o.(*PheromoneFood).GetPower()
 	}
 	_, ok := containsObjectByType(obs, HOME)
 	if ok {
@@ -302,7 +306,8 @@ func (a *Ant) scoreForCell(position Coordinates, isFood bool) float64 {
 	if !ok {
 		return 0
 	}
-	return float64(obs[i].(*PheromoneHome).power)
+	o := obs[i]
+	return float64(o.(*PheromoneHome).GetPower())
 
 }
 
