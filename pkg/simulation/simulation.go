@@ -148,7 +148,7 @@ func (s *Simulation) Run(abort <-chan bool) (chan int, chan []Object) {
 func (s *Simulation) step() []Object {
 	obs := make([]Object, len(s.data.dynamicObjects))
 	copy(obs, s.data.dynamicObjects)
-	t := make(chan struct{}, 100)
+	t := make(chan struct{}, 10)
 	var n sync.WaitGroup
 	for _, o := range s.data.dynamicObjects {
 		n.Add(1)
@@ -161,30 +161,22 @@ func (s *Simulation) step() []Object {
 	}
 	n.Wait()
 
-	s.data.staticObjects.Range(func(pos, os interface{}) bool {
-		n.Add(1)
-		go func() {
-			os.(*sync.Map).Range(func(id, o interface{}) bool {
-				switch o.(Object).GetType() {
-				case PHEROMONEFOOD:
-					if o.(*PheromoneFood).power < 0.00001 {
-						s.data.deleteObject(o.(Object).GetPosition(), o.(Object).GetID())
-						return true
-					}
-				case PHEROMONEHOME:
-					if o.(*PheromoneHome).power < 0.00001 {
-						s.data.deleteObject(o.(Object).GetPosition(), o.(Object).GetID())
-						return true
-					}
-				}
-				o.(Object).process()
-				obs = append(obs, o.(Object))
-
+	s.data.staticObjects._range(func(o Object) bool {
+		switch o.GetType() {
+		case PHEROMONEFOOD:
+			if o.(*PheromoneFood).power < 0.00001 {
+				s.data.deleteObject(o.GetPosition(), o.GetID())
 				return true
-			})
-			n.Done()
-		}()
-		n.Wait()
+			}
+		case PHEROMONEHOME:
+			if o.(*PheromoneHome).power < 0.00001 {
+				s.data.deleteObject(o.GetPosition(), o.GetID())
+				return true
+			}
+		}
+		o.process()
+		obs = append(obs, o)
+
 		return true
 	})
 
