@@ -10,13 +10,10 @@ github.com/jung-kurt/gofpdf v1.0.0/go.mod h1:7Id9E/uU8ce6rXgefFLlgrJj/GYY22cpxn+
 github.com/llgcode/draw2d v0.0.0-20200110163050-b96d8208fcfc/go.mod h1:mVa0dA29Db2S4LVqDYLlsePDzRJLDfdhVZiI15uY0FA=
 github.com/llgcode/draw2d v0.0.0-20200603164053-19660b984a28 h1:uahb8nqGTCUtkKCSdYwU8CsNfkTz4VEeOXxeM2E7VTQ=
 github.com/llgcode/draw2d v0.0.0-20200603164053-19660b984a28/go.mod h1:mVa0dA29Db2S4LVqDYLlsePDzRJLDfdhVZiI15uY0FA=
+github.com/llgcode/ps v0.0.0-20150911083025-f1443b32eedb h1:61ndUreYSlWFeCY44JxDDkngVoI7/1MVhEl98Nm0KOk=
 github.com/llgcode/ps v0.0.0-20150911083025-f1443b32eedb/go.mod h1:1l8ky+Ew27CMX29uG+a2hNOKpeNYEQjjtiALiBlFQbY=
 github.com/markfarnan/go-canvas v0.0.0-20200615171237-b4973c5a91e4 h1:8CtB5r1p+do4FvJ0kIpOgODC/m4J4SC3kGRV9uSqNJU=
 github.com/markfarnan/go-canvas v0.0.0-20200615171237-b4973c5a91e4/go.mod h1:PqPh9d/lLHBot/ZoW4ZbZaRVLdBIHJZfPYLaC84RSI8=
-github.com/shurcooL/go v0.0.0-20200502201357-93f07166e636 h1:aSISeOcal5irEhJd1M+IrApc0PdcN7e7Aj4yuEnOrfQ=
-github.com/shurcooL/go v0.0.0-20200502201357-93f07166e636/go.mod h1:TDJrrUr11Vxrven61rcy3hJMUqaf/CLWYhHNPmT14Lk=
-github.com/shurcooL/go-goon v0.0.0-20170922171312-37c2f522c041 h1:llrF3Fs4018ePo4+G/HV/uQUqEI1HMDjCeOf2V6puPc=
-github.com/shurcooL/go-goon v0.0.0-20170922171312-37c2f522c041/go.mod h1:N5mDOmsrJOB+vfqUK+7DmDyjhSLIIBnXo9lvZJj3MWQ=
 golang.org/x/image v0.0.0-20180708004352-c73c2afc3b81 h1:00VmoueYNlNz/aHIilyyQz/MHSqGoWJzpFv/HW8xpzI=
 golang.org/x/image v0.0.0-20180708004352-c73c2afc3b81/go.mod h1:ux5Hcp/YLpHSI86hEcLt0YII63i6oz57MZXIpbrjZUs=
 golang.org/x/image v0.0.0-20200609002522-3f4726a040e8 h1:c33/sRasKxMl6r30uyDkOgyIlZKMSQE/SSI/eDtrmBY=
